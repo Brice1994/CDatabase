@@ -1,18 +1,66 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+typedef enum {
+	META_COMMAND_SUCCESS,
+	META_COMMAND_UNRECOGNIZED_COMMAND
+} MetaCommandResult;
+
+typedef enum {
+	PREPARE_SUCCESS,
+	PREPARE_UNRECOGNIZED_STATEMENT
+} PrepareResult;
 
 typedef struct {
 	char* buffer;
 	size_t buffer_length;
 	ssize_t input_length;
 } InputBuffer;
+
+typedef enum {
+	STATEMENT_INSERT, STATEMENT_SELECT
+} StatementType;
+
+typedef struct {
+	StatementType type;
+} Statement;
+
 ssize_t getline(char **lineptr, size_t *n,FILE *stream);
+
+MetaCommandResult do_meta_command(InputBuffer* input_buffer){
+	if(strcmp(input_buffer -> buffer, ".exit") == 0){
+		exit(EXIT_SUCCESS);
+	}else {
+		return META_COMMAND_UNRECOGNIZED_COMMAND;	
+	}
+}
+
+void execute_statement(Statement* statement){
+	switch(statement->type){
+		case(STATEMENT_INSERT): printf("INSERT NOT ADDED YET");
+		break;
+		case (STATEMENT_SELECT): printf("SELECT NOT ADDED YET");
+		break;
+	}
+}
 
 void close_input_buffer(InputBuffer* input_buffer) {
 	free(input_buffer->buffer);
 	free(input_buffer);
 }
+
+PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) {
+	if(strncmp(input_buffer->buffer, "insert", 6) == 0) {
+		statement->type = STATEMENT_INSERT;
+		return PREPARE_SUCCESS;
+	}
+	if(strcmp(input_buffer->buffer, "select") == 0) {
+		statement->type = STATEMENT_SELECT;
+		return PREPARE_SUCCESS;	
+	}
+	return PREPARE_UNRECOGNIZED_STATEMENT;
+}
+
 void read_input(InputBuffer* input_buffer){
 	ssize_t bytes_read = getline(&(input_buffer->buffer), &(input_buffer->buffer_length), stdin);
 	if(bytes_read <= 0){
